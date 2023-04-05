@@ -41,9 +41,9 @@ public class PracticalTest01MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_practical_test01_main);
 
         intentFilter = new IntentFilter();
-        for (int i = 0; i < Constants.actions.size(); i++) {
-            intentFilter.addAction(Constants.actions.get(i));
-        }
+        intentFilter.addAction(Constants.ACTION_1);
+        intentFilter.addAction(Constants.ACTION_2);
+        intentFilter.addAction(Constants.ACTION_3);
 
         leftBtn = findViewById(R.id.press_me_btn);
         rightBtn = findViewById(R.id.press_me_too_btn);
@@ -54,10 +54,18 @@ public class PracticalTest01MainActivity extends AppCompatActivity {
 
         leftBtn.setOnClickListener(view -> {
             leftTextView.setText(String.valueOf(Integer.parseInt(leftTextView.getText().toString()) + 1));
+            int left = Integer.parseInt(leftTextView.getText().toString());
+            int right = Integer.parseInt(rightTextView.getText().toString());
+
+            startMyService(left, right);
         });
 
         rightBtn.setOnClickListener(view -> {
             rightTextView.setText(String.valueOf(Integer.parseInt(rightTextView.getText().toString()) + 1));
+            int left = Integer.parseInt(leftTextView.getText().toString());
+            int right = Integer.parseInt(rightTextView.getText().toString());
+
+            startMyService(left, right);
         });
 
         navigateBtn.setOnClickListener(view -> {
@@ -67,15 +75,20 @@ public class PracticalTest01MainActivity extends AppCompatActivity {
             startActivityForResult(intent, Constants.SECONDARY_ACTIVITY_REQUEST_CODE);
         });
 
-        int left = Integer.parseInt(leftTextView.getText().toString());
-        int right = Integer.parseInt(rightTextView.getText().toString());
+
+    }
+
+    private void startMyService(int left, int right) {
+        Intent intent = new Intent(getApplicationContext(), PracticalTest01Service.class);
+        intent.putExtra(Constants.LEFT_TEXT, leftTextView.getText().toString());
+        intent.putExtra(Constants.RIGHT_TEXT, rightTextView.getText().toString());
 
         if (!isServiceStarted && left + right >= Constants.THRESHOLD) {
-            Intent intent = new Intent(getApplicationContext(), PracticalTest01Service.class);
-            intent.putExtra(Constants.LEFT_TEXT, leftTextView.getText().toString());
-            intent.putExtra(Constants.RIGHT_TEXT, rightTextView.getText().toString());
             getApplicationContext().startService(intent);
             isServiceStarted = true;
+        } else if (isServiceStarted) {
+            // send the new values to the service to update the sum without creating a new service
+            getApplicationContext().startService(intent);
         }
     }
 

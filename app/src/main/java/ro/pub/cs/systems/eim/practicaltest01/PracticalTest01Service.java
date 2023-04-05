@@ -8,6 +8,8 @@ import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
 
 public class PracticalTest01Service extends Service {
+
+    ProcessingThread processingThread = null;
     public PracticalTest01Service() {
         super();
     }
@@ -20,22 +22,17 @@ public class PracticalTest01Service extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
-
         double left = Double.parseDouble(intent.getStringExtra(Constants.LEFT_TEXT));
         double right = Double.parseDouble(intent.getStringExtra(Constants.RIGHT_TEXT));
 
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        String date = simpleDateFormat.format(System.currentTimeMillis());
-
-        while (true) {
-            try {
-                Thread.sleep(10000);
-                sendBroadcast(new Intent(Constants.actions.get((int) Math.floor(Math.random() * 3)))
-                        .putExtra(Constants.SERVICE_LOG,
-                                date + " " + (left + right) / 2 + " " + Math.sqrt(left * right)));
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+        if (processingThread != null) {
+            processingThread.stopThread();
         }
+        processingThread = new ProcessingThread(this, left, right);
+        processingThread.start();
+
+
+        return START_STICKY;
     }
+
 }
