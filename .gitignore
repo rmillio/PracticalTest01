@@ -13,3 +13,7 @@
 .externalNativeBuild
 .cxx
 local.properties
+*.ap_
+*.class
+*.apk
+*.dex
