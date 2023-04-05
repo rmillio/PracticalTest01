@@ -3,8 +3,11 @@ package ro.pub.cs.systems.eim.practicaltest01;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.BroadcastReceiver;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -19,10 +22,28 @@ public class PracticalTest01MainActivity extends AppCompatActivity {
     TextView leftTextView;
     TextView rightTextView;
 
+    Boolean isServiceStarted = false;
+
+    IntentFilter intentFilter;
+
+    BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(android.content.Context context, Intent intent) {
+            String message = intent.getStringExtra(Constants.SERVICE_LOG);
+            Log.d(Constants.TAG, message);
+        }
+    };
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_practical_test01_main);
+
+        intentFilter = new IntentFilter();
+        for (int i = 0; i < Constants.actions.size(); i++) {
+            intentFilter.addAction(Constants.actions.get(i));
+        }
 
         leftBtn = findViewById(R.id.press_me_btn);
         rightBtn = findViewById(R.id.press_me_too_btn);
@@ -45,6 +66,36 @@ public class PracticalTest01MainActivity extends AppCompatActivity {
             intent.putExtra(Constants.RIGHT_TEXT, rightTextView.getText().toString());
             startActivityForResult(intent, Constants.SECONDARY_ACTIVITY_REQUEST_CODE);
         });
+
+        int left = Integer.parseInt(leftTextView.getText().toString());
+        int right = Integer.parseInt(rightTextView.getText().toString());
+
+        if (!isServiceStarted && left + right >= Constants.THRESHOLD) {
+            Intent intent = new Intent(getApplicationContext(), PracticalTest01Service.class);
+            intent.putExtra(Constants.LEFT_TEXT, leftTextView.getText().toString());
+            intent.putExtra(Constants.RIGHT_TEXT, rightTextView.getText().toString());
+            getApplicationContext().startService(intent);
+            isServiceStarted = true;
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        Intent intent = new Intent(getApplicationContext(), PracticalTest01Service.class);
+        getApplicationContext().stopService(intent);
+        super.onDestroy();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        registerReceiver(broadcastReceiver, intentFilter);
+    }
+
+    @Override
+    protected void onPause() {
+        unregisterReceiver(broadcastReceiver);
+        super.onPause();
     }
 
     @Override
